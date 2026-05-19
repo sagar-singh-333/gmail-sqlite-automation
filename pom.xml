@@ -1,53 +1,121 @@
-<build>
-    <plugins>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <version>3.11.0</version>
+    <modelVersion>4.0.0</modelVersion>
 
-            <configuration>
-                <source>11</source>
-                <target>11</target>
-            </configuration>
-        </plugin>
+    <groupId>com.byzan</groupId>
+    <artifactId>gmail-sqlite-automation</artifactId>
+    <version>1.0.0</version>
 
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-shade-plugin</artifactId>
-            <version>3.5.0</version>
+    <properties>
 
-            <executions>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
 
-                <execution>
+    </properties>
 
-                    <phase>package</phase>
+    <dependencies>
 
-                    <goals>
-                        <goal>shade</goal>
-                    </goals>
+        <!-- SQLITE -->
 
-                    <configuration>
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>3.45.1.0</version>
+        </dependency>
 
-                        <transformers>
+        <!-- APACHE POI -->
 
-                            <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.2.5</version>
+        </dependency>
 
-                                <mainClass>
-                                    com.byzan.automation.AutomationMain
-                                </mainClass>
+        <!-- GMAIL -->
 
-                            </transformer>
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>jakarta.mail</artifactId>
+            <version>2.0.1</version>
+        </dependency>
 
-                        </transformers>
+    </dependencies>
 
-                    </configuration>
+    <build>
 
-                </execution>
+        <plugins>
 
-            </executions>
+            <!-- COMPILER -->
 
-        </plugin>
+            <plugin>
 
-    </plugins>
-</build>
+                <groupId>org.apache.maven.plugins</groupId>
+
+                <artifactId>maven-compiler-plugin</artifactId>
+
+                <version>3.11.0</version>
+
+                <configuration>
+
+                    <source>11</source>
+
+                    <target>11</target>
+
+                </configuration>
+
+            </plugin>
+
+            <!-- FAT JAR -->
+
+            <plugin>
+
+                <groupId>org.apache.maven.plugins</groupId>
+
+                <artifactId>maven-shade-plugin</artifactId>
+
+                <version>3.5.0</version>
+
+                <executions>
+
+                    <execution>
+
+                        <phase>package</phase>
+
+                        <goals>
+
+                            <goal>shade</goal>
+
+                        </goals>
+
+                        <configuration>
+
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+
+                            <transformers>
+
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+
+                                    <mainClass>
+                                        com.byzan.automation.AutomationMain
+                                    </mainClass>
+
+                                </transformer>
+
+                            </transformers>
+
+                        </configuration>
+
+                    </execution>
+
+                </executions>
+
+            </plugin>
+
+        </plugins>
+
+    </build>
+
+</project>
