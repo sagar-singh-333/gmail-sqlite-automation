@@ -26,7 +26,18 @@ public class AutomationMain {
 
             File folder = new File("input");
 
-            File[] files = folder.listFiles();
+File[] files = folder.listFiles();
+System.out.println("INPUT FOLDER = " + folder.getAbsolutePath());
+if(files==null){
+System.out.println("NO FILES FOUND");System.out.println("FILES COUNT = " + files.length);
+
+}else{
+System.out.println("FILES COUNT = " + files.length);
+for(File f:files){
+System.out.println("FOUND FILE = "+f.getName());
+
+}
+}
 
             if(files != null) {
 
