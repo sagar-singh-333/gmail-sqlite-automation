@@ -1,0 +1,62 @@
+name: Gmail SQLite Automation
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  run-job:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Restore SQLite Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            github-actions-db
+            db-backups
+            processed
+          key: sqlite-cache-v2
+          restore-keys: |
+            sqlite-cache-
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 11
+
+      - name: Create Runtime Folders
+        run: |
+          mkdir -p input
+          mkdir -p output
+          mkdir -p processed
+          mkdir -p failed
+          mkdir -p logs
+          mkdir -p db-backups
+          mkdir -p github-actions-db
+
+      - name: Build Maven Project
+        run: mvn clean package -DskipTests
+
+      - name: Run Automation
+        env:
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+        run: |
+          java -cp target/gmail-sqlite-automation-1.0.0.jar com.byzan.automation.AutomationMain
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: automation-files
+          path: |
+            output
+            db-backups
+            github-actions-db
+            processed
