@@ -1,0 +1,11 @@
+com/byzan/automation/FolderCreator.class
+com/byzan/automation/MailSender$1.class
+com/byzan/automation/BackupManager.class
+com/byzan/automation/OutputGenerator.class
+com/byzan/automation/MailSender.class
+com/byzan/automation/ExcelProcessor.class
+com/byzan/automation/DuplicateFileChecker.class
+com/byzan/automation/DatabaseManager.class
+com/byzan/automation/GmailReader.class
+com/byzan/automation/AutomationMain.class
+com/byzan/automation/FileMover.class

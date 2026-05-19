@@ -1,15 +1,9 @@
 package com.byzan.automation;
 
-import jakarta.mail.BodyPart;
-import jakarta.mail.Flags;
-import jakarta.mail.Folder;
-import jakarta.mail.Message;
-import jakarta.mail.Multipart;
-import jakarta.mail.Part;
-import jakarta.mail.Session;
-import jakarta.mail.Store;
+import jakarta.mail.*;
+import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeBodyPart;
-import jakarta.mail.search.FlagTerm;
+import jakarta.mail.search.*;
 
 import java.io.File;
 import java.util.Properties;
@@ -18,47 +12,28 @@ public class GmailReader {
 
     private static final String INPUT_FOLDER = "input";
 
+    // CHANGE THESE
+    private static final String ALLOWED_SENDER =
+            "sagarsinghsago@gmail.com";
+
+    private static final String SUBJECT_KEYWORD =
+            "test";
+
     public void downloadAttachments() {
 
         Store store = null;
+
         Folder inbox = null;
 
         try {
 
-            System.out.println("================================");
             System.out.println("CONNECTING TO GMAIL");
-            System.out.println("================================");
-
-            String username = System.getenv("MAIL_USERNAME");
-            String password = System.getenv("MAIL_PASSWORD");
-
-            if (username == null || password == null) {
-
-                throw new RuntimeException(
-                        "MAIL_USERNAME / MAIL_PASSWORD missing"
-                );
-            }
 
             Properties props = new Properties();
 
             props.put(
                     "mail.store.protocol",
                     "imaps"
-            );
-
-            props.put(
-                    "mail.imap.ssl.enable",
-                    "true"
-            );
-
-            props.put(
-                    "mail.imap.host",
-                    "imap.gmail.com"
-            );
-
-            props.put(
-                    "mail.imap.port",
-                    "993"
             );
 
             Session session =
@@ -69,69 +44,96 @@ public class GmailReader {
 
             store.connect(
                     "imap.gmail.com",
-                    username,
-                    password
-            );
-
-            System.out.println(
-                    "GMAIL LOGIN SUCCESS"
+                    System.getenv("MAIL_USERNAME"),
+                    System.getenv("MAIL_PASSWORD")
             );
 
             inbox =
                     store.getFolder("INBOX");
 
-            inbox.open(Folder.READ_WRITE);
+            inbox.open(
+                    Folder.READ_WRITE
+            );
 
-            Message[] messages =
-                    inbox.search(
-                            new FlagTerm(
-                                    new Flags(
-                                            Flags.Flag.SEEN
-                                    ),
-                                    false
-                            )
+            SearchTerm unread =
+                    new FlagTerm(
+                            new Flags(
+                                    Flags.Flag.SEEN
+                            ),
+                            false
                     );
 
+            Message[] messages =
+                    inbox.search(unread);
+
             System.out.println(
-                    "MESSAGES FOUND = "
+                    "UNREAD MAILS="
                             + messages.length
             );
 
-            File inputDir =
-                    new File(INPUT_FOLDER);
+            new File(
+                    INPUT_FOLDER
+            ).mkdirs();
 
-            if (!inputDir.exists()) {
-
-                inputDir.mkdirs();
-
-                System.out.println(
-                        "INPUT FOLDER CREATED"
-                );
-            }
-
-            for (Message message : messages) {
+            for (
+                    Message msg
+                            : messages
+            ) {
 
                 try {
 
+                    String subject =
+                            msg.getSubject();
+
+                    String sender =
+                            ((InternetAddress)
+                                    msg.getFrom()[0])
+                                    .getAddress();
+
                     System.out.println(
-                            "SUBJECT = "
-                                    + message.getSubject()
+                            "CHECKING="
+                                    + subject
                     );
 
+                    // FILTER SENDER
+
+                    if (
+                            !sender
+                                    .equalsIgnoreCase(
+                                            ALLOWED_SENDER
+                                    )
+                    ) {
+
+                        continue;
+                    }
+
+                    // FILTER SUBJECT
+
+                    if (
+                            subject == null
+                                    ||
+                                    !subject.contains(
+                                            SUBJECT_KEYWORD
+                                    )
+                    ) {
+
+                        continue;
+                    }
+
                     Object content =
-                            message.getContent();
+                            msg.getContent();
 
-                    if (!(content instanceof Multipart)) {
-
-                        System.out.println(
-                                "NO ATTACHMENT"
-                        );
+                    if (
+                            !(content
+                                    instanceof Multipart)
+                    ) {
 
                         continue;
                     }
 
                     Multipart multipart =
-                            (Multipart) content;
+                            (Multipart)
+                                    content;
 
                     for (
                             int i = 0;
@@ -139,134 +141,98 @@ public class GmailReader {
                             i++
                     ) {
 
-                        BodyPart bodyPart =
-                                multipart.getBodyPart(i);
-
-                        if (
-                                bodyPart.getDisposition()
-                                        == null
-                        ) {
-
-                            continue;
-                        }
+                        BodyPart body =
+                                multipart
+                                        .getBodyPart(
+                                                i
+                                        );
 
                         if (
                                 Part.ATTACHMENT
                                         .equalsIgnoreCase(
-                                                bodyPart
+                                                body
                                                         .getDisposition()
                                         )
                         ) {
 
                             MimeBodyPart part =
                                     (MimeBodyPart)
-                                            bodyPart;
+                                            body;
 
-                            String fileName =
-                                    part.getFileName();
+                            String file =
+                                    part
+                                            .getFileName();
 
                             System.out.println(
-                                    "ATTACHMENT = "
-                                            + fileName
+                                    "ATTACHMENT="
+                                            + file
                             );
 
                             if (
-                                    fileName == null
-                            ) {
-
-                                continue;
-                            }
-
-                            if (
-                                    !fileName
+                                    file
                                             .toLowerCase()
-                                            .endsWith(".xlsx")
+                                            .endsWith(
+                                                    ".xlsx"
+                                            )
                             ) {
 
-                                System.out.println(
-                                        "SKIPPED (NOT XLSX)"
+                                File save =
+                                        new File(
+                                                INPUT_FOLDER
+                                                        +
+                                                        "/"
+                                                        +
+                                                        file
+                                        );
+
+                                part.saveFile(
+                                        save
                                 );
 
-                                continue;
+                                System.out.println(
+                                        "DOWNLOADED="
+                                                +
+                                                file
+                                );
                             }
-
-                            File saveFile =
-                                    new File(
-                                            INPUT_FOLDER
-                                                    + File.separator
-                                                    + fileName
-                                    );
-
-                            part.saveFile(
-                                    saveFile
-                            );
-
-                            System.out.println(
-                                    "DOWNLOADED = "
-                                            + saveFile
-                                                    .getAbsolutePath()
-                            );
                         }
                     }
 
-                    message.setFlag(
+                    msg.setFlag(
                             Flags.Flag.SEEN,
                             true
                     );
 
                     System.out.println(
-                            "MAIL MARKED READ"
+                            "MAIL PROCESSED"
                     );
 
-                } catch (Exception ex) {
-
-                    System.out.println(
-                            "MAIL FAILED"
-                    );
-
-                    ex.printStackTrace();
                 }
+
+                catch (
+                        Exception e
+                ) {
+
+                    e.printStackTrace();
+                }
+
             }
 
-            System.out.println(
-                    "DOWNLOAD PROCESS FINISHED"
+            inbox.close(
+                    true
             );
 
-        } catch (Exception e) {
+            store.close();
 
-            System.out.println(
-                    "GMAIL CONNECTION FAILED"
-            );
+        }
+
+        catch (
+                Exception e
+        ) {
 
             e.printStackTrace();
-
-        } finally {
-
-            try {
-
-                if (
-                        inbox != null
-                                && inbox.isOpen()
-                ) {
-
-                    inbox.close(true);
-                }
-
-            } catch (Exception ignored) {
-            }
-
-            try {
-
-                if (
-                        store != null
-                                && store.isConnected()
-                ) {
-
-                    store.close();
-                }
-
-            } catch (Exception ignored) {
-            }
         }
+
     }
+
 }
