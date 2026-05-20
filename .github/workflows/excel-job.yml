@@ -1,62 +1,133 @@
 name: Gmail SQLite Automation
 
 on:
+
   schedule:
     - cron: '*/5 * * * *'
+
   workflow_dispatch:
 
 jobs:
+
   run-job:
+
     runs-on: ubuntu-latest
 
     steps:
 
-      - name: Checkout Repository
+      - name: Checkout
+
         uses: actions/checkout@v4
 
-      - name: Restore SQLite Cache
-        uses: actions/cache@v4
+
+      - name: Restore Database Cache
+
+        uses: actions/cache/restore@v4
+
         with:
+
           path: |
+
             github-actions-db
+
             db-backups
+
             processed
-          key: sqlite-cache-v2
+
+          key: sqlite-db-main
+
           restore-keys: |
-            sqlite-cache-
+
+            sqlite-db-
+
+
+      - name: Verify Restored Files
+
+        run: |
+
+          echo "DATABASE"
+
+          ls -la github-actions-db || true
+
+          echo "BACKUPS"
+
+          ls -la db-backups || true
+
 
       - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 11
 
-      - name: Create Runtime Folders
+        uses: actions/setup-java@v4
+
+        with:
+
+          distribution: temurin
+
+          java-version: 17
+
+
+      - name: Create Folders
+
         run: |
+
           mkdir -p input
           mkdir -p output
-          mkdir -p processed
-          mkdir -p failed
-          mkdir -p logs
           mkdir -p db-backups
           mkdir -p github-actions-db
+          mkdir -p processed
+          mkdir -p failed
 
-      - name: Build Maven Project
-        run: mvn clean package -DskipTests
+
+      - name: Build
+
+        run: |
+
+          mvn clean package -DskipTests
+
 
       - name: Run Automation
+
         env:
+
           MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+
           MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+
         run: |
+
           java -jar target/gmail-sqlite-automation-1.0.0.jar
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+
+      - name: Save Database Cache
+
+        uses: actions/cache/save@v4
+
         with:
-          name: automation-files
+
           path: |
-            output
-            db-backups
+
             github-actions-db
+
+            db-backups
+
+            processed
+
+          key: sqlite-db-main
+
+
+      - name: Upload Artifacts
+
+        uses: actions/upload-artifact@v4
+
+        with:
+
+          name: automation-files
+
+          path: |
+
+            github-actions-db
+
+            db-backups
+
+            output
+
             processed
