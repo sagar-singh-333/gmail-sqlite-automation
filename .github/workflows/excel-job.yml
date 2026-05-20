@@ -7,18 +7,22 @@ on:
 
   workflow_dispatch:
 
+
 jobs:
 
   run-job:
 
     runs-on: ubuntu-latest
 
+    timeout-minutes: 30
+
     steps:
 
-      - name: Checkout
-
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
+
+      # RESTORE PREVIOUS DATABASE
 
       - name: Restore Database Cache
 
@@ -34,24 +38,32 @@ jobs:
 
             processed
 
-          key: sqlite-db-main
+          key: sqlite-db-${{ github.ref_name }}
 
           restore-keys: |
 
             sqlite-db-
 
 
-      - name: Verify Restored Files
+      - name: Verify Restore
 
         run: |
 
-          echo "DATABASE"
+          echo "===== DATABASE ====="
 
           ls -la github-actions-db || true
 
-          echo "BACKUPS"
+          echo ""
+
+          echo "===== BACKUPS ====="
 
           ls -la db-backups || true
+
+          echo ""
+
+          echo "===== PROCESSED ====="
+
+          ls -la processed || true
 
 
       - name: Setup Java
@@ -65,19 +77,20 @@ jobs:
           java-version: 17
 
 
-      - name: Create Folders
+      - name: Create Runtime Folders
 
         run: |
 
           mkdir -p input
           mkdir -p output
-          mkdir -p db-backups
           mkdir -p github-actions-db
+          mkdir -p db-backups
           mkdir -p processed
           mkdir -p failed
+          mkdir -p logs
 
 
-      - name: Build
+      - name: Build Maven Project
 
         run: |
 
@@ -97,7 +110,11 @@ jobs:
           java -jar target/gmail-sqlite-automation-1.0.0.jar
 
 
+      # SAVE UPDATED DATABASE
+
       - name: Save Database Cache
+
+        if: always()
 
         uses: actions/cache/save@v4
 
@@ -111,10 +128,12 @@ jobs:
 
             processed
 
-          key: sqlite-db-main
+          key: sqlite-db-${{ github.run_id }}
 
 
       - name: Upload Artifacts
+
+        if: always()
 
         uses: actions/upload-artifact@v4
 
@@ -131,3 +150,5 @@ jobs:
             output
 
             processed
+
+            logs
