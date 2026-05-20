@@ -1,12 +1,10 @@
 name: Gmail SQLite Automation
 
 on:
-
   schedule:
     - cron: '*/5 * * * *'
 
   workflow_dispatch:
-
 
 jobs:
 
@@ -14,55 +12,10 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    timeout-minutes: 30
-
     steps:
 
-      - name: Checkout Repository
-
+      - name: Checkout
         uses: actions/checkout@v4
-
-
-      - name: Restore Database Cache
-
-        uses: actions/cache/restore@v4
-
-        with:
-
-          path: |
-
-            github-actions-db
-
-            db-backups
-
-            processed
-
-          key: sqlite-main
-
-          restore-keys: |
-
-            sqlite-main
-
-
-      - name: Show Existing Files
-
-        run: |
-
-          echo "DATABASE"
-
-          ls -la github-actions-db || true
-
-          echo ""
-
-          echo "BACKUPS"
-
-          ls -la db-backups || true
-
-          echo ""
-
-          echo "PROCESSED"
-
-          ls -la processed || true
 
 
       - name: Setup Java
@@ -76,7 +29,7 @@ jobs:
           java-version: 17
 
 
-      - name: Create Runtime Folders
+      - name: Create Folders
 
         run: |
 
@@ -85,11 +38,10 @@ jobs:
           mkdir -p github-actions-db
           mkdir -p db-backups
           mkdir -p processed
-          mkdir -p failed
           mkdir -p logs
 
 
-      - name: Build Maven Project
+      - name: Build
 
         run: |
 
@@ -109,26 +61,7 @@ jobs:
           java -jar target/gmail-sqlite-automation-1.0.0.jar
 
 
-      - name: Save Database Cache
-
-        if: always()
-
-        uses: actions/cache/save@v4
-
-        with:
-
-          path: |
-
-            github-actions-db
-
-            db-backups
-
-            processed
-
-          key: sqlite-main
-
-
-      - name: Upload Artifacts
+      - name: Upload Files
 
         if: always()
 
@@ -138,18 +71,18 @@ jobs:
 
           name: automation-files
 
-          if-no-files-found: warn
-
           compression-level: 0
+
+          overwrite: true
 
           path: |
 
-            github-actions-db/**
+            github-actions-db
 
-            db-backups/**
+            db-backups
 
-            output/**
+            processed
 
-            processed/**
+            output
 
-            logs/**
+            logs
