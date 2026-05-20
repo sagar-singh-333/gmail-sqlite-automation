@@ -1,12 +1,10 @@
 name: Gmail SQLite Automation
 
 on:
-
   schedule:
     - cron: '*/5 * * * *'
 
   workflow_dispatch:
-
 
 jobs:
 
@@ -14,7 +12,8 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    timeout-minutes: 30
+    permissions:
+      contents: read
 
     steps:
 
@@ -22,9 +21,9 @@ jobs:
         uses: actions/checkout@v4
 
 
-      # RESTORE PREVIOUS DATABASE
+      # RESTORE SAME DATABASE
 
-      - name: Restore Database Cache
+      - name: Restore Database
 
         uses: actions/cache/restore@v4
 
@@ -38,32 +37,22 @@ jobs:
 
             processed
 
-          key: sqlite-db-${{ github.ref_name }}
-
-          restore-keys: |
-
-            sqlite-db-
+          key: sqlite-main
 
 
-      - name: Verify Restore
+      - name: Debug Existing Database
 
         run: |
 
-          echo "===== DATABASE ====="
+          echo "DATABASE"
 
           ls -la github-actions-db || true
 
           echo ""
 
-          echo "===== BACKUPS ====="
+          echo "BACKUPS"
 
           ls -la db-backups || true
-
-          echo ""
-
-          echo "===== PROCESSED ====="
-
-          ls -la processed || true
 
 
       - name: Setup Java
@@ -90,7 +79,7 @@ jobs:
           mkdir -p logs
 
 
-      - name: Build Maven Project
+      - name: Build
 
         run: |
 
@@ -110,9 +99,18 @@ jobs:
           java -jar target/gmail-sqlite-automation-1.0.0.jar
 
 
-      # SAVE UPDATED DATABASE
+      # OVERWRITE CACHE WITH NEW DB
 
-      - name: Save Database Cache
+      - name: Delete Previous Cache Lock
+
+        continue-on-error: true
+
+        run: |
+
+          echo "Preparing DB"
+
+
+      - name: Save Database
 
         if: always()
 
@@ -128,7 +126,7 @@ jobs:
 
             processed
 
-          key: sqlite-db-${{ github.run_id }}
+          key: sqlite-main-${{ github.run_number }}
 
 
       - name: Upload Artifacts
