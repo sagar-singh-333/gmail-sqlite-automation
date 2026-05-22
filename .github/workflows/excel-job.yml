@@ -7,6 +7,7 @@ on:
 
   workflow_dispatch:
 
+
 jobs:
 
   run-job:
@@ -18,7 +19,7 @@ jobs:
 
     steps:
 
-      - name: Checkout
+      - name: Checkout Repository
 
         uses: actions/checkout@v4
 
@@ -26,7 +27,7 @@ jobs:
           fetch-depth: 0
 
 
-      - name: Pull Latest
+      - name: Pull Latest Repository
 
         run: |
 
@@ -44,7 +45,7 @@ jobs:
           java-version: 17
 
 
-      - name: Create Folders
+      - name: Create Runtime Folders
 
         run: |
 
@@ -53,10 +54,11 @@ jobs:
           mkdir -p github-actions-db
           mkdir -p db-backups
           mkdir -p processed
+          mkdir -p failed
           mkdir -p logs
 
 
-      - name: Build
+      - name: Build Maven Project
 
         run: |
 
@@ -76,18 +78,29 @@ jobs:
           java -jar target/gmail-sqlite-automation-1.0.0.jar
 
 
-      - name: Commit Database
+      - name: Save Database
+
+        if: always()
 
         run: |
 
-          git config user.name github-actions
-          git config user.email github-actions@github.com
+          git config user.name "github-actions"
+
+          git config user.email "github-actions@github.com"
 
           git add github-actions-db || true
+
           git add db-backups || true
+
           git add processed || true
 
-          git commit -m "update sqlite db" || true
+          git add output || true
+
+          git status
+
+          git commit -m "update sqlite database" || true
+
+          git pull origin main --rebase || true
 
           git push origin main || true
 
@@ -102,6 +115,8 @@ jobs:
 
           name: automation-files
 
+          if-no-files-found: warn
+
           path: |
 
             github-actions-db
@@ -111,3 +126,5 @@ jobs:
             processed
 
             output
+
+            logs
