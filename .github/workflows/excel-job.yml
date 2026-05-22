@@ -17,8 +17,6 @@ jobs:
     permissions:
       contents: write
 
-    timeout-minutes: 30
-
     steps:
 
       - name: Checkout Repository
@@ -29,7 +27,7 @@ jobs:
           fetch-depth: 0
 
 
-      - name: Sync Latest Repository
+      - name: Pull Latest Repository
 
         run: |
 
@@ -80,35 +78,6 @@ jobs:
           java -jar target/gmail-sqlite-automation-1.0.0.jar
 
 
-      - name: Show Generated Files
-
-        if: always()
-
-        run: |
-
-          echo "===== DATABASE ====="
-
-          ls -la github-actions-db || true
-
-          echo ""
-
-          echo "===== BACKUPS ====="
-
-          ls -la db-backups || true
-
-          echo ""
-
-          echo "===== OUTPUT ====="
-
-          ls -la output || true
-
-          echo ""
-
-          echo "===== PROCESSED ====="
-
-          ls -la processed || true
-
-
       - name: Save Database
 
         if: always()
@@ -145,8 +114,6 @@ jobs:
         with:
 
           name: automation-files
-
-          overwrite: true
 
           if-no-files-found: warn
 
