@@ -5,7 +5,7 @@ import java.sql.DriverManager;
 
 public class DatabaseManager {
 
-    private static final String URL =
+    private static final String DB =
             "jdbc:sqlite:github-actions-db/automation.db";
 
     public static Connection getConnection()
@@ -16,8 +16,9 @@ public class DatabaseManager {
         );
 
         return DriverManager.getConnection(
-                URL
+                DB
         );
+
     }
 
     public static void createTable() {
@@ -27,58 +28,58 @@ public class DatabaseManager {
                         getConnection()
         ) {
 
-            String sql1 =
-
-                    "CREATE TABLE IF NOT EXISTS EXCEL_DATA ("
-
-                            +
-
-                            "ID INTEGER PRIMARY KEY AUTOINCREMENT,"
-
-                            +
-
-                            "NAME TEXT,"
-
-                            +
-
-                            "EMAIL TEXT,"
-
-                            +
-
-                            "AMOUNT TEXT"
-
-                            +
-
-                            ")";
-
-            String sql2 =
-
-                    "CREATE TABLE IF NOT EXISTS PROCESSED_FILES("
-
-                            +
-
-                            "ID INTEGER PRIMARY KEY AUTOINCREMENT,"
-
-                            +
-
-                            "FILE_NAME TEXT UNIQUE"
-
-                            +
-
-                            ")";
-
             conn.createStatement()
                     .execute(
-                            sql1
+
+                            "CREATE TABLE IF NOT EXISTS EXCEL_DATA("
+
+                                    +
+
+                                    "ID INTEGER PRIMARY KEY AUTOINCREMENT,"
+
+                                    +
+
+                                    "FILE_DATE TEXT,"
+
+                                    +
+
+                                    "FILE_NAME TEXT,"
+
+                                    +
+
+                                    "NAME TEXT,"
+
+                                    +
+
+                                    "EMAIL TEXT,"
+
+                                    +
+
+                                    "AMOUNT TEXT,"
+
+                                    +
+
+                                    "INSERT_TIME DATETIME DEFAULT CURRENT_TIMESTAMP"
+
+                                    +
+
+                                    ")"
+
                     );
 
             conn.createStatement()
                     .execute(
-                            sql2
+
+                            "CREATE TABLE IF NOT EXISTS PROCESSED_FILES("
+
+                                    +
+
+                                    "FILE_NAME TEXT UNIQUE)"
+
                     );
 
             System.out.println(
-                    "DATABASE READY"
+                    "DATE TABLE READY"
             );
 
         }
@@ -88,6 +89,7 @@ public class DatabaseManager {
         ) {
 
             e.printStackTrace();
+
         }
 
     }
